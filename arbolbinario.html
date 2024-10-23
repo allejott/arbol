@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Árbol Binario Interactivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #tree {
+            margin-top: 20px;
+        }
+        .node {
+            display: inline-block;
+            text-align: center;
+            margin: 10px;
+        }
+        .line {
+            border-top: 2px solid black;
+            width: 50px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Árbol Binario Interactivo</h1>
+
+    <!-- Formulario para agregar un nodo -->
+    <form id="formNodo">
+        <label for="nodoValor">Valor del nodo: </label>
+        <input type="number" id="nodoValor" required>
+        <button type="submit">Agregar Nodo</button>
+    </form>
+
+    <!-- Formulario para buscar un nodo -->
+    <form id="formBuscarNodo">
+        <label for="buscarValor">Buscar nodo: </label>
+        <input type="number" id="buscarValor" required>
+        <button type="submit">Buscar Nodo</button>
+    </form>
+
+    <!-- Formulario para eliminar un nodo -->
+    <form id="formEliminarNodo">
+        <label for="eliminarValor">Eliminar nodo: </label>
+        <input type="number" id="eliminarValor" required>
+        <button type="submit">Eliminar Nodo</button>
+    </form>
+
+    <!-- Formulario para modificar un nodo -->
+    <form id="formModificarNodo">
+        <label for="valorViejo">Nodo a modificar: </label>
+        <input type="number" id="valorViejo" required>
+        <label for="valorNuevo">Nuevo valor: </label>
+        <input type="number" id="valorNuevo" required>
+        <button type="submit">Modificar Nodo</button>
+    </form>
+
+    <div id="tree"></div>
+
+    <script>
+        // Clase Nodo
+        class Nodo {
+            constructor(valor) {
+                this.valor = valor;
+                this.izquierdo = null;
+                this.derecho = null;
+            }
+        }
+
+        // Clase Árbol Binario
+        class ArbolBinario {
+            constructor() {
+                this.raiz = null;
+            }
+
+            insertar(valor) {
+                this.raiz = this.insertarRecursivo(this.raiz, valor);
+            }
+
+            insertarRecursivo(nodo, valor) {
+                if (nodo === null) {
+                    return new Nodo(valor);
+                }
+                if (valor < nodo.valor) {
+                    nodo.izquierdo = this.insertarRecursivo(nodo.izquierdo, valor);
+                } else if (valor > nodo.valor) {
+                    nodo.derecho = this.insertarRecursivo(nodo.derecho, valor);
+                }
+                return nodo;
+            }
+
+            buscar(valor) {
+                return this.buscarRecursivo(this.raiz, valor);
+            }
+
+            buscarRecursivo(nodo, valor) {
+                if (nodo === null || nodo.valor === valor) {
+                    return nodo;
+                }
+                if (valor < nodo.valor) {
+                    return this.buscarRecursivo(nodo.izquierdo, valor);
+                }
+                return this.buscarRecursivo(nodo.derecho, valor);
+            }
+
+            eliminar(valor) {
+                this.raiz = this.eliminarRecursivo(this.raiz, valor);
+            }
+
+            eliminarRecursivo(nodo, valor) {
+                if (nodo === null) {
+                    return nodo;
+                }
+
+                if (valor < nodo.valor) {
+                    nodo.izquierdo = this.eliminarRecursivo(nodo.izquierdo, valor);
+                } else if (valor > nodo.valor) {
+                    nodo.derecho = this.eliminarRecursivo(nodo.derecho, valor);
+                } else {
+                    // Caso 1: Nodo sin hijos
+                    if (nodo.izquierdo === null && nodo.derecho === null) {
+                        return null;
+                    }
+
+                    // Caso 2: Nodo con un solo hijo
+                    if (nodo.izquierdo === null) {
+                        return nodo.derecho;
+                    } else if (nodo.derecho === null) {
+                        return nodo.izquierdo;
+                    }
+
+                    // Caso 3: Nodo con dos hijos
+                    const minDerecho = this.minValorNodo(nodo.derecho);
+                    nodo.valor = minDerecho.valor;
+                    nodo.derecho = this.eliminarRecursivo(nodo.derecho, minDerecho.valor);
+                }
+                return nodo;
+            }
+
+            // Encontrar el valor mínimo en un subárbol
+            minValorNodo(nodo) {
+                let actual = nodo;
+                while (actual.izquierdo !== null) {
+                    actual = actual.izquierdo;
+                }
+                return actual;
+            }
+
+            modificar(valorViejo, valorNuevo) {
+                this.eliminar(valorViejo);
+                this.insertar(valorNuevo);
+            }
+
+            generarHTML(nodo) {
+                if (nodo === null) {
+                    return "";
+                }
+                let html = `
+                    <div class="node">
+                        <div>${nodo.valor}</div>
+                        <div>
+                            ${this.generarHTML(nodo.izquierdo)}
+                            ${this.generarHTML(nodo.derecho)}
+                        </div>
+                    </div>
+                `;
+                return html;
+            }
+
+            mostrar() {
+                const contenedor = document.getElementById('tree');
+                contenedor.innerHTML = this.generarHTML(this.raiz);
+            }
+        }
+
+        // Crear el árbol binario
+        const arbol = new ArbolBinario();
+
+        // Agregar un nodo
+        document.getElementById('formNodo').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const valor = parseInt(document.getElementById('nodoValor').value);
+            if (!isNaN(valor)) {
+                arbol.insertar(valor);
+                arbol.mostrar();
+            }
+            document.getElementById('nodoValor').value = '';
+        });
+
+        // Buscar un nodo
+        document.getElementById('formBuscarNodo').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const valor = parseInt(document.getElementById('buscarValor').value);
+            const encontrado = arbol.buscar(valor);
+            if (encontrado) {
+                alert("Nodo encontrado: " + encontrado.valor);
+            } else {
+                alert("Nodo no encontrado.");
+            }
+        });
+
+        // Eliminar un nodo
+        document.getElementById('formEliminarNodo').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const valor = parseInt(document.getElementById('eliminarValor').value);
+            arbol.eliminar(valor);
+            arbol.mostrar();
+        });
+
+        // Modificar un nodo
+        document.getElementById('formModificarNodo').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const valorViejo = parseInt(document.getElementById('valorViejo').value);
+            const valorNuevo = parseInt(document.getElementById('valorNuevo').value);
+            arbol.modificar(valorViejo, valorNuevo);
+            arbol.mostrar();
+        });
+
+    </script>
+
+</body>
+</html>
